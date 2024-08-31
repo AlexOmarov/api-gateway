@@ -1,0 +1,74 @@
+name: "Code quality workflow"
+
+on:
+  push:
+    branches:
+      - dev
+      - master
+
+permissions: read-all
+
+concurrency:
+  group: code_quality
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: .
+
+jobs:
+  code_quality:
+    name: "Code quality"
+    runs-on: ubuntu-latest
+    steps:
+      - name: NotifyPush
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ github.actor }} -> ${{ github.repository }}
+
+            ${{ github.event.commits[0].message }}
+
+            *Starting*
+
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: JavaSetup
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'liberica'
+          java-version: '21'
+
+      - name: GradleSetup
+        uses: gradle/gradle-build-action@v2.4.2
+        with:
+          gradle-version: 8.9
+
+      - name: Build and test
+        run: ./gradlew build
+
+      - name: Scan
+        run: ./gradlew sonar -D"sonar.host.url"="https://sonarcloud.io" -D"sonar.token"=${{ secrets.SONAR_TOKEN }} -D"sonar.projectKey"=${{ secrets.SONAR_PROJECT_KEY }} -D"sonar.organization"=${{ secrets.SONAR_ORG }}
+
+      - name: NotifyCompletion
+        if: always()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ${{ github.actor }} -> ${{ github.repository }}
+            
+            ${{ github.event.commits[0].message }}
+
+            *${{ job.status }}*
+            
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}

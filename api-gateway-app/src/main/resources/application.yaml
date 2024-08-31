@@ -1,0 +1,15 @@
+ktor:
+  deployment:
+    port: 8080
+  application:
+    modules:
+      - ru.somarov.gateway.infrastructure.config.ApplicationConfigKt.config
+  name: "$APP_NAME:api-gateway"
+  instance: "$HOSTNAME:undefined"
+  otel:
+    protocol: "http"
+    host: "$OTEL_HOST:localhost"
+    logs-port: "4317"
+    metrics-port: "4318"
+    tracing-port: "4319"
+    tracing-probability: "1.0"
