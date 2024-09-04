@@ -1,7 +1,5 @@
 package ru.somarov.gateway.infrastructure.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.cbor.CBORFactory
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.cbor.*
 import io.ktor.server.application.*
@@ -22,8 +20,8 @@ import kotlinx.serialization.cbor.Cbor
 import ru.somarov.gateway.application.service.Service
 import ru.somarov.gateway.infrastructure.observability.setupObservability
 import ru.somarov.gateway.infrastructure.props.AppProps
+import ru.somarov.gateway.infrastructure.rsocket.client.Client
 import ru.somarov.gateway.infrastructure.rsocket.client.Config
-import ru.somarov.gateway.infrastructure.rsocket.client.Factory
 import ru.somarov.gateway.infrastructure.rsocket.server.Interceptor
 import ru.somarov.gateway.presentation.http.healthcheck
 import ru.somarov.gateway.presentation.rsocket.authSocket
@@ -38,14 +36,6 @@ internal fun Application.config() {
     val (meterRegistry, observationRegistry) = setupObservability(props)
 
     val service = Service()
-    val mapper = ObjectMapper(CBORFactory())
-
-    val client = Factory.create(
-        config = Config(TcpClientTransport.create("", 123)),
-        mapper = mapper,
-        meterRegistry = meterRegistry,
-        observationRegistry = observationRegistry
-    )
 
     install(ContentNegotiation) { cbor(Cbor { ignoreUnknownKeys = true }) }
 
@@ -69,10 +59,12 @@ internal fun Application.config() {
     install(RSocketSupport) {
         server {
             interceptors {
-                forResponder(Interceptor(mapper, meterRegistry, observationRegistry))
+                forResponder(Interceptor(meterRegistry, observationRegistry))
             }
         }
     }
+
+    val client = Client(Config(TcpClientTransport.create("", 123), meterRegistry, observationRegistry))
 
     routing {
         healthcheck()

@@ -6,6 +6,7 @@ import io.micrometer.observation.ObservationRegistry
 import io.rsocket.kotlin.ExperimentalMetadataApi
 import io.rsocket.kotlin.RSocket
 import io.rsocket.kotlin.payload.Payload
+import io.rsocket.metadata.WellKnownMimeType
 import io.rsocket.micrometer.MicrometerRSocketInterceptor
 import io.rsocket.micrometer.observation.ObservationResponderRSocketProxy
 import kotlinx.coroutines.Dispatchers
@@ -15,30 +16,35 @@ import org.slf4j.LoggerFactory.getLogger
 import reactor.core.publisher.Mono
 import ru.somarov.gateway.infrastructure.observability.micrometer.observeSuspendedMono
 import ru.somarov.gateway.infrastructure.rsocket.deserialize
-import ru.somarov.gateway.infrastructure.rsocket.from
+import ru.somarov.gateway.infrastructure.rsocket.toJavaPayload
 import ru.somarov.gateway.infrastructure.rsocket.toKotlinPayload
 import kotlin.coroutines.CoroutineContext
 
 class Decorator(
     private val input: RSocket,
-    private val mapper: ObjectMapper,
     private val registry: ObservationRegistry
 ) : io.rsocket.RSocket {
     private val logger = getLogger(this.javaClass)
 
-    @OptIn(ExperimentalMetadataApi::class)
+    @ExperimentalMetadataApi
     override fun requestResponse(payload: io.rsocket.Payload): Mono<io.rsocket.Payload> {
         val context = (Dispatchers.IO + input.coroutineContext).minusKey(Job().key)
         val observation = registry.currentObservation!!
 
         return observation.observeSuspendedMono(coroutineContext = context) {
-            val req = payload.deserialize(mapper, logger, Any::class.java)
-            logger.info("Incoming rsocket request -> ${req.route}: payload: ${req.body}, metadata: ${req.metadata}")
+            val req = payload.deserialize<Any>()
+            logger.info(
+                "Incoming rsocket request -> ${req.metadata[WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.name]}: " +
+                        "payload: ${req.body}, metadata: ${req.metadata}"
+            )
 
-            val result = io.rsocket.Payload::class.from(input.requestResponse(payload.toKotlinPayload()))
+            val result = input.requestResponse(payload.toKotlinPayload()).toJavaPayload()
 
-            val resp = result.deserialize(mapper, logger, Any::class.java)
-            logger.info("Outgoing rsocket response <- ${resp.route}: payload: ${resp.body}, metadata: ${resp.metadata}")
+            val resp = result.deserialize<Any>()
+            logger.info(
+                "Outgoing rsocket response <- ${resp.metadata[WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.name]}: " +
+                        "payload: ${resp.body}, metadata: ${resp.metadata}"
+            )
 
             result
         }.contextCapture()
@@ -46,15 +52,14 @@ class Decorator(
 
 
     companion object {
-        @OptIn(ExperimentalMetadataApi::class)
+        @ExperimentalMetadataApi
         fun decorate(
             input: RSocket,
-            mapper: ObjectMapper,
             observationRegistry: ObservationRegistry,
             meterRegistry: MeterRegistry
         ): RSocket {
             val enrichedJavaRSocket = ObservationResponderRSocketProxy(
-                MicrometerRSocketInterceptor(meterRegistry).apply(Decorator(input, mapper, observationRegistry)),
+                MicrometerRSocketInterceptor(meterRegistry).apply(Decorator(input, observationRegistry)),
                 observationRegistry
             )
             return object : RSocket {
@@ -62,7 +67,7 @@ class Decorator(
                     get() = input.coroutineContext
 
                 override suspend fun requestResponse(payload: Payload): Payload {
-                    return enrichedJavaRSocket.requestResponse(io.rsocket.Payload::class.from(payload))
+                    return enrichedJavaRSocket.requestResponse(payload.toJavaPayload())
                         .contextCapture()
                         .awaitSingle()
                         .toKotlinPayload()
