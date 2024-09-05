@@ -1,6 +1,9 @@
 package ru.somarov.gateway.infrastructure.rsocket.server
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.cbor.CBORFactory
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.observation.ObservationRegistry
 import io.rsocket.kotlin.ExperimentalMetadataApi
@@ -12,19 +15,16 @@ import io.rsocket.micrometer.observation.ObservationResponderRSocketProxy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.reactor.awaitSingle
-import org.slf4j.LoggerFactory.getLogger
 import reactor.core.publisher.Mono
 import ru.somarov.gateway.infrastructure.observability.micrometer.observeSuspendedMono
-import ru.somarov.gateway.infrastructure.rsocket.deserialize
-import ru.somarov.gateway.infrastructure.rsocket.toJavaPayload
-import ru.somarov.gateway.infrastructure.rsocket.toKotlinPayload
+import ru.somarov.gateway.infrastructure.rsocket.payload.deserialize
+import ru.somarov.gateway.infrastructure.rsocket.payload.toJavaPayload
+import ru.somarov.gateway.infrastructure.rsocket.payload.toKotlinPayload
 import kotlin.coroutines.CoroutineContext
 
-class Decorator(
-    private val input: RSocket,
-    private val registry: ObservationRegistry
-) : io.rsocket.RSocket {
-    private val logger = getLogger(this.javaClass)
+class Decorator(private val input: RSocket, private val registry: ObservationRegistry) : io.rsocket.RSocket {
+    private val logger = logger { }
+    private val mapper = ObjectMapper(CBORFactory()).registerKotlinModule()
 
     @ExperimentalMetadataApi
     override fun requestResponse(payload: io.rsocket.Payload): Mono<io.rsocket.Payload> {
@@ -32,24 +32,23 @@ class Decorator(
         val observation = registry.currentObservation!!
 
         return observation.observeSuspendedMono(coroutineContext = context) {
-            val req = payload.deserialize<Any>()
-            logger.info(
+            val req = payload.deserialize(mapper)
+            logger.info {
                 "Incoming rsocket request -> ${req.metadata[WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.name]}: " +
-                        "payload: ${req.body}, metadata: ${req.metadata}"
-            )
+                    "payload: ${req.body}, metadata: ${req.metadata}"
+            }
 
             val result = input.requestResponse(payload.toKotlinPayload()).toJavaPayload()
 
-            val resp = result.deserialize<Any>()
-            logger.info(
+            val resp = result.deserialize(mapper)
+            logger.info {
                 "Outgoing rsocket response <- ${resp.metadata[WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.name]}: " +
-                        "payload: ${resp.body}, metadata: ${resp.metadata}"
-            )
+                    "payload: ${resp.body}, metadata: ${resp.metadata}"
+            }
 
             result
         }.contextCapture()
     }
-
 
     companion object {
         @ExperimentalMetadataApi
@@ -59,6 +58,7 @@ class Decorator(
             meterRegistry: MeterRegistry
         ): RSocket {
             val enrichedJavaRSocket = ObservationResponderRSocketProxy(
+                @Suppress
                 MicrometerRSocketInterceptor(meterRegistry).apply(Decorator(input, observationRegistry)),
                 observationRegistry
             )

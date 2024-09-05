@@ -21,11 +21,12 @@ import ru.somarov.gateway.application.service.Service
 import ru.somarov.gateway.infrastructure.observability.setupObservability
 import ru.somarov.gateway.infrastructure.props.AppProps
 import ru.somarov.gateway.infrastructure.rsocket.client.Client
-import ru.somarov.gateway.infrastructure.rsocket.client.Config
 import ru.somarov.gateway.infrastructure.rsocket.server.Interceptor
+import ru.somarov.gateway.infrastructure.rsocket.client.Config
 import ru.somarov.gateway.presentation.http.healthcheck
 import ru.somarov.gateway.presentation.rsocket.authSocket
 import java.util.*
+import kotlin.coroutines.EmptyCoroutineContext
 
 @Suppress("unused") // Referenced in application.yaml
 @OptIn(ExperimentalSerializationApi::class)
@@ -44,9 +45,7 @@ internal fun Application.config() {
         meterBinders = listOf(JvmMemoryMetrics(), JvmGcMetrics(), ProcessorMetrics())
     }
 
-    install(RequestValidation) {
-
-    }
+    install(RequestValidation)
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
@@ -64,7 +63,10 @@ internal fun Application.config() {
         }
     }
 
-    val client = Client(Config(TcpClientTransport.create("", 123), meterRegistry, observationRegistry))
+    val client = Client(
+        Config(TcpClientTransport.create("", Random().nextInt()), meterRegistry, observationRegistry),
+        EmptyCoroutineContext
+    )
 
     routing {
         healthcheck()

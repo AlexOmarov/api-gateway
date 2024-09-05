@@ -10,21 +10,9 @@ class Masker : ValueMasker {
     )
 
     private val pattern = "(: \"|=|\":|: |:)[^,& :}\n]{2,}"
-    private var maskPatterns: List<Pair<Pattern, String>>
 
-    init {
-        val patterns = fields.map { Pair(Pattern.compile("$it$pattern"), "$it=") }.toMutableList()
-        patterns.addAll(
-            listOf(
-                Pair(
-                    Pattern.compile("Contact[(]typeRef=ref.ContactType.Mobile, code=[(0-9)], value=[^,& :}\n]*"),
-                    "Contact(typeRef=ref.ContactType.Mobile, code=*, value="
-                ),
-                Pair(Pattern.compile("Income[(]amount=[^& :)]*"), "Income(amount="),
-            )
-        )
-        maskPatterns = patterns
-    }
+    private var maskPatterns: List<Pair<Pattern, String>> =
+        fields.map { Pair(Pattern.compile("$it$pattern"), "$it=") }.toMutableList()
 
     override fun mask(jsonStreamContext: JsonStreamContext, o: Any): Any {
         if (o is CharSequence) {

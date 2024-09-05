@@ -1,5 +1,6 @@
-package ru.somarov.gateway.infrastructure.rsocket
+package ru.somarov.gateway.infrastructure.rsocket.payload
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.netty.buffer.ByteBufAllocator
@@ -11,16 +12,10 @@ import io.rsocket.kotlin.internal.BufferPool
 import io.rsocket.kotlin.metadata.CompositeMetadata.Reader.read
 import io.rsocket.metadata.CompositeMetadata
 import io.rsocket.metadata.CompositeMetadataCodec
-import io.rsocket.metadata.WellKnownMimeType
 import io.rsocket.util.DefaultPayload
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.decodeFromByteArray
-import kotlinx.serialization.json.Json
 import java.nio.charset.Charset
 import java.util.*
 import io.rsocket.kotlin.payload.Payload as payload
-
 
 @ExperimentalMetadataApi
 fun io.rsocket.kotlin.payload.Payload.toJavaPayload(): Payload {
@@ -44,28 +39,21 @@ suspend fun Payload.toKotlinPayload(): io.rsocket.kotlin.payload.Payload {
     )
 }
 
-
-@OptIn(ExperimentalSerializationApi::class)
 @Suppress("kotlin:S6518") // Here byteArray should be filled with get method
-inline fun <reified T : Any> Payload.deserialize(): Message<T> {
+fun Payload.deserialize(mapper: ObjectMapper): Message {
     val encoding = Charset.forName("UTF8")
     val metadata = CompositeMetadata(Unpooled.wrappedBuffer(this.metadata), false)
         .associate {
             (it.mimeType ?: "Unknown mime type ${UUID.randomUUID()}") to
-                    if (isText(it.content, encoding)) it.content.toString(encoding) else "Not text"
+                if (isText(it.content, encoding)) it.content.toString(encoding) else "Not text"
         }
-
-    val mime = metadata[WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE.string]
 
     val array = ByteArray(data.remaining())
     data.get(array)
     data.rewind()
 
     val body = if (array.isNotEmpty()) {
-        when (mime) {
-            WellKnownMimeType.APPLICATION_CBOR.name -> Cbor.Default.decodeFromByteArray<T>(array)
-            else -> Json.Default.decodeFromString(String(array))
-        }
+        mapper.writeValueAsString(mapper.readValue(array, Any::class.java))
     } else {
         null
     }
@@ -73,8 +61,7 @@ inline fun <reified T : Any> Payload.deserialize(): Message<T> {
     return Message(body, metadata)
 }
 
-data class Message<T: Any>(
-    val body: T?,
+data class Message(
+    val body: String?,
     val metadata: Map<String, String>
 )
-

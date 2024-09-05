@@ -1,9 +1,11 @@
 package ru.somarov.gateway.infrastructure.rsocket.client
 
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.rsocket.core.RSocketClient
 import io.rsocket.core.RSocketConnector
 import io.rsocket.core.Resume
 import io.rsocket.kotlin.ExperimentalMetadataApi
+import io.rsocket.kotlin.RSocket
 import io.rsocket.kotlin.payload.Payload
 import io.rsocket.loadbalance.LoadbalanceRSocketClient
 import io.rsocket.loadbalance.LoadbalanceTarget
@@ -17,13 +19,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import ru.somarov.gateway.infrastructure.rsocket.toJavaPayload
-import ru.somarov.gateway.infrastructure.rsocket.toKotlinPayload
+import ru.somarov.gateway.infrastructure.rsocket.payload.toJavaPayload
+import ru.somarov.gateway.infrastructure.rsocket.payload.toKotlinPayload
 import java.time.Duration.ofMillis
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 
-class Client(private val config: Config) {
-    private val logger = org.slf4j.LoggerFactory.getLogger(this.javaClass)
+class Client(private val config: Config, override val coroutineContext: CoroutineContext) : RSocket {
+    private val logger = logger {}
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
@@ -36,19 +39,21 @@ class Client(private val config: Config) {
         scope.launch {
             while (true) {
                 delay(config.refreshInterval)
-                logger.info("Refreshing rsocket pool")
+
+                logger.info { "Refreshing rsocket pool" }
 
                 val new = create()
                 old = current
                 current = new
                 old?.dispose()
-                logger.info("Pool is refreshed")
+
+                logger.info { "Pool is refreshed" }
             }
         }
     }
 
     @ExperimentalMetadataApi
-    suspend fun requestResponse(payload: Payload): Payload {
+    override suspend fun requestResponse(payload: Payload): Payload {
         return current.requestResponse(Mono.just(payload.toJavaPayload())).awaitSingle().toKotlinPayload()
     }
 
