@@ -52,7 +52,7 @@ class Client(private val config: Config, override val coroutineContext: Coroutin
         }
     }
 
-    @ExperimentalMetadataApi
+    @OptIn(ExperimentalMetadataApi::class)
     override suspend fun requestResponse(payload: Payload): Payload {
         return current.requestResponse(Mono.just(payload.toJavaPayload())).awaitSingle().toKotlinPayload()
     }

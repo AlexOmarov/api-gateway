@@ -13,3 +13,7 @@ ktor:
     metrics-port: "4318"
     tracing-port: "4319"
     tracing-probability: "1.0"
+  clients:
+    auth:
+      host: "business-auth.business"
+      port: 7000
