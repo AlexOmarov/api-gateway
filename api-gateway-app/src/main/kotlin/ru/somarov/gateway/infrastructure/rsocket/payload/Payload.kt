@@ -53,7 +53,7 @@ fun Payload.deserialize(mapper: ObjectMapper): Message {
     data.rewind()
 
     val body = if (array.isNotEmpty()) {
-        mapper.writeValueAsString(mapper.readValue(array, Any::class.java))
+        mapper.readValue(array, Any::class.java).toString()
     } else {
         null
     }

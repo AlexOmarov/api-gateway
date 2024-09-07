@@ -19,6 +19,7 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.observation.Observation
 import io.micrometer.observation.transport.ReceiverContext
 import io.rsocket.transport.netty.client.TcpClientTransport
+import io.rsocket.transport.netty.client.WebsocketClientTransport
 import kotlinx.serialization.json.Json
 import ru.somarov.gateway.application.service.Service
 import ru.somarov.gateway.infrastructure.observability.micrometer.observeAndAwait
@@ -28,6 +29,7 @@ import ru.somarov.gateway.infrastructure.rsocket.client.Client
 import ru.somarov.gateway.infrastructure.rsocket.client.Config
 import ru.somarov.gateway.presentation.http.auth
 import ru.somarov.gateway.presentation.http.healthcheck
+import java.net.URI
 import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -72,7 +74,8 @@ internal fun Application.config() {
 
     val client = Client(
         Config(
-            TcpClientTransport.create(props.clients.auth.host, props.clients.auth.port),
+            WebsocketClientTransport.create(URI.create(props.clients.auth.host)),
+            "auth",
             meterRegistry,
             observationRegistry
         ),
@@ -80,7 +83,7 @@ internal fun Application.config() {
     )
 
     val service = Service(client)
-    // TODO: why request keeps going, redo dispose client use count down latch
+    // TODO: redo dispose client use count down latch
 
     routing {
         healthcheck()

@@ -9,6 +9,7 @@ import java.time.Duration
 
 data class Config(
     val transport: ClientTransport,
+    val name: String,
     val meterRegistry: MeterRegistry,
     val observationRegistry: ObservationRegistry,
     val poolSize: Int = POOL_SIZE,
@@ -47,10 +48,10 @@ data class Config(
         private const val RESUME_DELAY = 1L
         private const val RESUME_JITTER = 1.0
 
-        private const val KEEPALIVE_INTERVAL = 3L
-        private const val KEEPALIVE_MAX_LIFETIME = 8L
+        private const val KEEPALIVE_INTERVAL = 1000L
+        private const val KEEPALIVE_MAX_LIFETIME = 2000L
 
         private const val REFRESH_INTERVAL = 10_000L
-        private const val POOL_SIZE = 3
+        private const val POOL_SIZE = 1
     }
 }

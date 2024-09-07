@@ -15,5 +15,4 @@ ktor:
     tracing-probability: "1.0"
   clients:
     auth:
-      host: "business-auth.business"
-      port: 7000
+      host: "http://localhost:8081/register"
