@@ -3,6 +3,7 @@ package ru.somarov.gateway.infrastructure.rsocket.client
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.rsocket.core.RSocketClient
 import io.rsocket.core.RSocketConnector
+import io.rsocket.core.Resume
 import io.rsocket.kotlin.ExperimentalMetadataApi
 import io.rsocket.kotlin.RSocket
 import io.rsocket.kotlin.payload.Payload
@@ -11,6 +12,7 @@ import io.rsocket.loadbalance.LoadbalanceTarget
 import io.rsocket.micrometer.MicrometerRSocketInterceptor
 import io.rsocket.micrometer.observation.ObservationRequesterRSocketProxy
 import io.rsocket.plugins.RSocketInterceptor
+import io.rsocket.transport.netty.client.WebsocketClientTransport
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -20,6 +22,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import ru.somarov.gateway.infrastructure.rsocket.payload.toJavaPayload
 import ru.somarov.gateway.infrastructure.rsocket.payload.toKotlinPayload
+import java.net.URI
 import java.time.Duration
 import java.time.Duration.ofMillis
 import java.util.*
@@ -66,7 +69,7 @@ class Client(private val config: Config, override val coroutineContext: Coroutin
     private fun create(): RSocketClient {
         val connector = RSocketConnector.create()
 
-        // connector.resume(Resume().also { it.retry(config.resumption.retry) })
+        config.resumption?.let { connector.resume(Resume().retry(config.resumption.retry)) }
         connector.reconnect(config.reconnect.retry)
         connector.keepAlive(ofMillis(config.keepAlive.interval), ofMillis(config.keepAlive.maxLifeTime))
 
@@ -76,15 +79,26 @@ class Client(private val config: Config, override val coroutineContext: Coroutin
             it.forRequester(RSocketInterceptor { ObservationRequesterRSocketProxy(it, config.observationRegistry) })
         }
 
-        val source = mutableListOf<LoadbalanceTarget>()
-        repeat(config.poolSize) { source.add(LoadbalanceTarget.from(UUID.randomUUID().toString(), config.transport)) }
-
-        val sources = Flux.just(source)
-            .repeatWhen { it.delayElements(Duration.ofSeconds(2)) }
+        val sources = Flux.generate { it.next(generateSources()) }
+            .delayElements(Duration.ofSeconds(2))
 
         return LoadbalanceRSocketClient.builder(sources)
             .connector(connector)
             .weightedLoadbalanceStrategy()
             .build()
+    }
+
+    private fun generateSources(): MutableList<LoadbalanceTarget> {
+        val source = mutableListOf<LoadbalanceTarget>()
+        repeat(config.poolSize) {
+            source.add(
+                LoadbalanceTarget.from(
+                    UUID.randomUUID().toString(), WebsocketClientTransport.create(
+                        URI(config.transport)
+                    )
+                )
+            )
+        }
+        return source
     }
 }

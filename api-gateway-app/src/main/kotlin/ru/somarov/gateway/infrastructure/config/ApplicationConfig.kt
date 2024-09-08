@@ -74,16 +74,16 @@ internal fun Application.config() {
 
     val client = Client(
         Config(
-            WebsocketClientTransport.create(URI.create(props.clients.auth.host)),
+            props.clients.auth.host,
             "auth",
             meterRegistry,
-            observationRegistry
+            observationRegistry,
         ),
         EmptyCoroutineContext
     )
 
     val service = Service(client)
-    // TODO: redo dispose client use count down latch
+    // TODO: redo dispose client use count down latch, connections are created on each request and doesn't close
 
     routing {
         healthcheck()

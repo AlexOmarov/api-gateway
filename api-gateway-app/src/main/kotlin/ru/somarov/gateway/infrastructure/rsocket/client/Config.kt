@@ -2,19 +2,18 @@ package ru.somarov.gateway.infrastructure.rsocket.client
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.observation.ObservationRegistry
-import io.rsocket.transport.ClientTransport
 import reactor.util.retry.Retry
 import reactor.util.retry.RetryBackoffSpec
 import java.time.Duration
 
 data class Config(
-    val transport: ClientTransport,
+    val transport: String,
     val name: String,
     val meterRegistry: MeterRegistry,
     val observationRegistry: ObservationRegistry,
     val poolSize: Int = POOL_SIZE,
     val refreshInterval: Long = REFRESH_INTERVAL,
-    val resumption: ResumptionConfig = ResumptionConfig(),
+    val resumption: ResumptionConfig? = null,
     val reconnect: ReconnectConfig = ReconnectConfig(),
     val keepAlive: KeepAliveConfig = KeepAliveConfig(),
 ) {
@@ -52,6 +51,6 @@ data class Config(
         private const val KEEPALIVE_MAX_LIFETIME = 2000L
 
         private const val REFRESH_INTERVAL = 10_000L
-        private const val POOL_SIZE = 1
+        private const val POOL_SIZE = 3
     }
 }
