@@ -33,7 +33,7 @@ class Interceptor : RSocketInterceptor {
             .doOnSuccess {
                 val resp = it.deserialize(mapper)
                 log.info {
-                    "Incoming RS response -> ${resp.metadata[WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.string]}: " +
+                    "Incoming RS response -> ${req.metadata[WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.string]}: " +
                         "payload: ${resp.body}, metadata: ${resp.metadata}"
                 }
             }

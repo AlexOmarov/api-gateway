@@ -45,7 +45,10 @@ fun Payload.deserialize(mapper: ObjectMapper): Message {
     val metadata = CompositeMetadata(Unpooled.wrappedBuffer(this.metadata), false)
         .associate {
             (it.mimeType ?: "Unknown mime type ${UUID.randomUUID()}") to
-                if (isText(it.content, encoding)) it.content.toString(encoding) else "Not text"
+                if (isText(it.content, encoding))
+                    it.content.toString(encoding).filter { char -> !char.isISOControl() }
+                else
+                    "Not text"
         }
 
     val array = ByteArray(data.remaining())

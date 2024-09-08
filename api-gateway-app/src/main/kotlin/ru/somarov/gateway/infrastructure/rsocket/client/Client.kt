@@ -3,7 +3,6 @@ package ru.somarov.gateway.infrastructure.rsocket.client
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.rsocket.core.RSocketClient
 import io.rsocket.core.RSocketConnector
-import io.rsocket.core.Resume
 import io.rsocket.kotlin.ExperimentalMetadataApi
 import io.rsocket.kotlin.RSocket
 import io.rsocket.kotlin.payload.Payload
@@ -50,7 +49,7 @@ class Client(private val config: Config, override val coroutineContext: Coroutin
                     old?.dispose()
 
                     logger.info { "Pool is refreshed" }
-                } catch (e:Exception) {
+                } catch (e: Exception) {
                     logger.error(e) { "Got error while refreshing rsocket pool for client ${config.name}" }
                 }
             }
@@ -59,7 +58,9 @@ class Client(private val config: Config, override val coroutineContext: Coroutin
 
     @OptIn(ExperimentalMetadataApi::class)
     override suspend fun requestResponse(payload: Payload): Payload {
-        return current.requestResponse(Mono.just(payload.toJavaPayload())).awaitSingle().toKotlinPayload()
+        return current.requestResponse(Mono.just(payload.toJavaPayload()))
+            .contextCapture()
+            .awaitSingle().toKotlinPayload()
     }
 
     private fun create(): RSocketClient {
