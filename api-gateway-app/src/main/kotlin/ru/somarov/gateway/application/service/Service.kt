@@ -14,11 +14,11 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
-import ru.somarov.gateway.infrastructure.rsocket.client.Client
+import ru.somarov.gateway.infrastructure.rsocket.client.RSocketCloudClient
 import ru.somarov.gateway.presentation.request.RegistrationRequest
 import ru.somarov.gateway.presentation.response.RegistrationResponse
 
-class Service(private val client: Client) {
+class Service(private val client: RSocketCloudClient) {
     private val log = logger { }
 
     @OptIn(ExperimentalSerializationApi::class, ExperimentalMetadataApi::class)

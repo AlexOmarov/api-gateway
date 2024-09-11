@@ -5,8 +5,6 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.plugins.statuspages.*
@@ -18,18 +16,15 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.observation.Observation
 import io.micrometer.observation.transport.ReceiverContext
-import io.rsocket.transport.netty.client.TcpClientTransport
-import io.rsocket.transport.netty.client.WebsocketClientTransport
 import kotlinx.serialization.json.Json
 import ru.somarov.gateway.application.service.Service
 import ru.somarov.gateway.infrastructure.observability.micrometer.observeAndAwait
 import ru.somarov.gateway.infrastructure.observability.setupObservability
 import ru.somarov.gateway.infrastructure.props.AppProps
-import ru.somarov.gateway.infrastructure.rsocket.client.Client
 import ru.somarov.gateway.infrastructure.rsocket.client.Config
+import ru.somarov.gateway.infrastructure.rsocket.client.RSocketCloudClient
 import ru.somarov.gateway.presentation.http.auth
 import ru.somarov.gateway.presentation.http.healthcheck
-import java.net.URI
 import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -72,18 +67,19 @@ internal fun Application.config() {
         }
     }
 
-    val client = Client(
-        Config(
-            props.clients.auth.host,
-            "auth",
-            meterRegistry,
-            observationRegistry,
+    val client = RSocketCloudClient(
+        config = Config(
+            host = props.clients.auth.host,
+            name = "auth",
+            meterRegistry = meterRegistry,
+            observationRegistry = observationRegistry,
         ),
-        EmptyCoroutineContext
+        coroutineContext = EmptyCoroutineContext
     )
 
     val service = Service(client)
-    // TODO: redo dispose client use count down latch, connections are created on each request and doesn't close
+    // TODO: redo dispose client use count down latch, connections are created on each request and doesn't close.
+    // Some shit with client - doesn't load balance to third instance
 
     routing {
         healthcheck()
