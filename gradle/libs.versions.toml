@@ -15,8 +15,9 @@ micrometer = "1.13.1"
 micrometer-context-propagation = "1.1.1"
 micrometer-reactor = "1.1.8"
 micrometer-tracing = "1.3.0"
-otel = "1.37.0"
-otel-logback-encoder = "2.4.0-alpha"
+otel = "1.42.0"
+otel-logback-encoder = "2.8.0-alpha"
+otel-micrometer = "2.8.0-alpha"
 rsocket-micrometer = "1.1.4"
 rsocket="0.16.0"
 rsocket-transport-ktor="0.15.4"
@@ -56,10 +57,10 @@ logback-otel = { group = "io.opentelemetry.instrumentation", name = "opentelemet
 micrometer = { group = "io.micrometer", name = "micrometer-core", version.ref = "micrometer" }
 micrometer-context-propagation = { group = "io.micrometer", name = "context-propagation", version.ref = "micrometer-context-propagation" }
 micrometer-reactor = { group = "io.projectreactor", name = "reactor-core-micrometer", version.ref = "micrometer-reactor" }
-micrometer-registry-otlp = { group = "io.micrometer", name = "micrometer-registry-otlp", version.ref = "micrometer" }
 micrometer-tracing = { group = "io.micrometer", name = "micrometer-tracing", version.ref = "micrometer-tracing" }
 micrometer-tracing-otel = { group = "io.micrometer", name = "micrometer-tracing-bridge-otel", version.ref = "micrometer-tracing" }
 otel-otlp-exporter = { module = "io.opentelemetry:opentelemetry-exporter-otlp", version.ref = "otel" }
+otel-micrometer = { module = "io.opentelemetry.instrumentation:opentelemetry-micrometer-1.5", version.ref = "otel-micrometer" }
 rsocket-core = { group = "io.rsocket.kotlin", name = "rsocket-core", version.ref = "rsocket" }
 rsocket-ktor-client = { group = "io.rsocket.kotlin", name = "rsocket-ktor-client", version.ref = "rsocket" }
 rsocket-ktor-server = { group = "io.rsocket.kotlin", name = "rsocket-ktor-server", version.ref = "rsocket" }
@@ -84,7 +85,7 @@ kotlinx = [
 logback = ["logback", "logback-logstash", "logback-otel"]
 micrometer = [
     "micrometer",
-    "micrometer-registry-otlp",
+    "otel-micrometer",
     "micrometer-reactor",
     "micrometer-tracing",
     "micrometer-tracing-otel",

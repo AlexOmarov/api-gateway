@@ -1,5 +1,8 @@
 package ru.somarov.gateway.infrastructure.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.cbor.CBORFactory
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -33,6 +36,7 @@ internal fun Application.config() {
     val log = KotlinLogging.logger { }
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     val props = AppProps.parseProps(environment)
+    val mapper = ObjectMapper(CBORFactory()).registerKotlinModule()
 
     val (meterRegistry, observationRegistry) = setupObservability(props)
 
@@ -70,16 +74,15 @@ internal fun Application.config() {
     val client = RSocketCloudClient(
         config = Config(
             host = props.clients.auth.host,
-            name = "auth",
-            meterRegistry = meterRegistry,
-            observationRegistry = observationRegistry,
+            name = "auth"
         ),
+        meterRegistry = meterRegistry,
+        observationRegistry = observationRegistry,
+        mapper = mapper,
         coroutineContext = EmptyCoroutineContext
     )
 
     val service = Service(client)
-    // TODO: redo dispose client use count down latch, connections are created on each request and doesn't close.
-    // Some shit with client - doesn't load balance to third instance
 
     routing {
         healthcheck()

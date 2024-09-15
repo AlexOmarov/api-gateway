@@ -15,4 +15,4 @@ ktor:
     tracing-probability: "1.0"
   clients:
     auth:
-      host: "http://localhost:8081/register"
+      host: "http://localhost:8082/register"

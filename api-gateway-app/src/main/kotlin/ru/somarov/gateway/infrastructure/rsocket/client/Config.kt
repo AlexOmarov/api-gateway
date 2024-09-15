@@ -1,7 +1,5 @@
 package ru.somarov.gateway.infrastructure.rsocket.client
 
-import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.observation.ObservationRegistry
 import io.rsocket.loadbalance.LoadbalanceStrategy
 import io.rsocket.loadbalance.RoundRobinLoadbalanceStrategy
 import reactor.util.retry.Retry
@@ -11,14 +9,11 @@ import java.time.Duration
 data class Config(
     val name: String,
     val host: String,
-    val poolSize: Int = POOL_SIZE,
-    val refreshInterval: Long = REFRESH_INTERVAL,
-    val meterRegistry: MeterRegistry,
-    val observationRegistry: ObservationRegistry,
+    val loadBalanceStrategy: LoadbalanceStrategy = RoundRobinLoadbalanceStrategy(),
+    val pool: PoolConfig = PoolConfig(),
     val resumption: ResumptionConfig? = null,
     val reconnect: ReconnectConfig = ReconnectConfig(),
     val keepAlive: KeepAliveConfig = KeepAliveConfig(),
-    val loadBalanceStrategy: LoadbalanceStrategy = RoundRobinLoadbalanceStrategy(),
 ) {
     data class ReconnectConfig(
         val attempts: Long = RECONNECT_ATTEMPTS,
@@ -41,6 +36,12 @@ data class Config(
         val maxLifeTime: Long = KEEPALIVE_MAX_LIFETIME
     )
 
+    data class PoolConfig(
+        val size: Int = POOL_SIZE,
+        val interval: Long = REFRESH_INTERVAL
+    )
+
+
     companion object {
         private const val RECONNECT_ATTEMPTS = 5L
         private const val RECONNECT_DELAY = 1L
@@ -51,9 +52,9 @@ data class Config(
         private const val RESUME_JITTER = 1.0
 
         private const val KEEPALIVE_INTERVAL = 1000L
-        private const val KEEPALIVE_MAX_LIFETIME = 2000L
+        private const val KEEPALIVE_MAX_LIFETIME = 20000L
 
-        private const val REFRESH_INTERVAL = 10_000L
-        private const val POOL_SIZE = 10
+        private const val REFRESH_INTERVAL = 3_000L
+        private const val POOL_SIZE = 1
     }
 }

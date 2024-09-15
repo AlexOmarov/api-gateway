@@ -7,8 +7,6 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler
 import io.micrometer.observation.ObservationHandler
 import io.micrometer.observation.ObservationRegistry
-import io.micrometer.registry.otlp.OtlpConfig
-import io.micrometer.registry.otlp.OtlpMeterRegistry
 import io.micrometer.tracing.handler.DefaultTracingObservationHandler
 import io.micrometer.tracing.handler.PropagatingReceiverTracingObservationHandler
 import io.micrometer.tracing.handler.PropagatingSenderTracingObservationHandler
@@ -22,6 +20,7 @@ import io.micrometer.tracing.otel.bridge.Slf4JBaggageEventListener
 import io.micrometer.tracing.otel.bridge.Slf4JEventListener
 import io.opentelemetry.context.ContextStorage
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender
+import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry
 import io.rsocket.micrometer.observation.ByteBufGetter
 import io.rsocket.micrometer.observation.ByteBufSetter
 import io.rsocket.micrometer.observation.RSocketRequesterTracingObservationHandler
@@ -35,7 +34,7 @@ fun setupObservability(props: AppProps): Pair<MeterRegistry, ObservationRegistry
     val sdk = createOpenTelemetrySdk(props)
     val buildProps = getBuildProperties()
 
-    val meterRegistry = OtlpMeterRegistry(OtlpConfig.DEFAULT, Clock.SYSTEM).also {
+    val meterRegistry = OpenTelemetryMeterRegistry.create(sdk).also {
         it.config().commonTags(
             "application", props.name,
             "instance", props.instance
