@@ -17,7 +17,6 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
 import io.opentelemetry.sdk.trace.samplers.Sampler
 import ru.somarov.gateway.infrastructure.props.AppProps
-import java.time.Duration
 
 fun createOpenTelemetrySdk(props: AppProps): OpenTelemetrySdk {
     return OpenTelemetrySdk.builder()
@@ -35,9 +34,7 @@ private fun buildMeterProvider(props: AppProps): SdkMeterProvider {
                 OtlpGrpcMetricExporter.builder()
                     .setEndpoint("${props.otel.protocol}://${props.otel.host}:${props.otel.metricsPort}")
                     .build()
-            )
-                .setInterval(Duration.ofMillis(1000))
-                .build()
+            ).build()
         )
         .setResource(
             Resource.create(

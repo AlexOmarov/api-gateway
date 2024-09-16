@@ -15,12 +15,14 @@ import io.rsocket.micrometer.MicrometerRSocketInterceptor
 import io.rsocket.micrometer.observation.ObservationRequesterRSocketProxy
 import io.rsocket.plugins.RSocketInterceptor
 import io.rsocket.transport.netty.client.WebsocketClientTransport
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.asFlux
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
+import kotlinx.coroutines.withContext
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import ru.somarov.gateway.infrastructure.rsocket.payload.deserialize
@@ -31,6 +33,7 @@ import java.time.Duration.ofMillis
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
+@Suppress("TooManyFunctions")
 @OptIn(ExperimentalMetadataApi::class)
 class RSocketCloudClient(
     private val config: Config,
@@ -41,32 +44,16 @@ class RSocketCloudClient(
 ) : RSocket {
     private val log = logger { }
 
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
     private val sources = mutableListOf<LoadbalanceTarget>()
 
-    // TODO: for some reason here dispose is called on rsocket, but stream continues. Why
     private val client = LoadbalanceRSocketClient
-        .builder(
-            flow {
-                while (true) {
-                    delay(1000)
-                    emit(sources)
-                }
-            }.asFlux().doOnNext { log.info { "Got next element $it for load balancing" } }
-        )
+        .builder(createInfiniteSources())
         .connector(createConnector())
         .loadbalanceStrategy(config.loadBalanceStrategy)
         .build()
 
     init {
         repeat(config.pool.size) { sources.add(createTarget(config.host)) }
-        scope.launch {
-            while (true) {
-                delay(config.pool.interval)
-                updateConnectionPool()
-            }
-        }
     }
 
     override suspend fun requestResponse(payload: Payload): Payload {
@@ -110,6 +97,16 @@ class RSocketCloudClient(
 
     private fun foldContext() = coroutineContext
         .fold(mutableMapOf<String, Any?>()) { acc, el -> acc.also { it[el.key.toString()] = el } }
+
+    private fun createInfiniteSources() = flow {
+        while (true) {
+            delay(config.pool.interval)
+            updateConnectionPool()
+            emit(sources)
+        }
+    }
+        .asFlux()
+        .doOnNext { log.info { "Got next list ${it.map { it.key }} for load balancing" } }
 
     private fun updateConnectionPool() {
         val new = createTarget(config.host)

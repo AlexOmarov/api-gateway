@@ -56,6 +56,10 @@ class LoggingInterceptor(private val mapper: ObjectMapper) : RSocketInterceptor 
                 .requestChannel(loggedPayloads)
                 .doOnNext { log.info { createMessage("Incoming RS channel payload ->", it) } }
         }
+
+        override fun dispose() {
+            input.dispose()
+        }
     }
 
     private fun createMessage(type: String, payload: Payload): String {

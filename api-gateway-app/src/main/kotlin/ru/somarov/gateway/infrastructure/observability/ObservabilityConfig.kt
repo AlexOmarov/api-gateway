@@ -1,7 +1,6 @@
 package ru.somarov.gateway.infrastructure.observability
 
 import io.ktor.server.application.Application
-import io.micrometer.core.instrument.Clock
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler
