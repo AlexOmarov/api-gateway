@@ -21,11 +21,12 @@ import io.micrometer.observation.Observation
 import io.micrometer.observation.transport.ReceiverContext
 import kotlinx.serialization.json.Json
 import ru.somarov.gateway.application.service.Service
-import ru.somarov.gateway.infrastructure.observability.micrometer.observeAndAwait
-import ru.somarov.gateway.infrastructure.observability.setupObservability
+import ru.somarov.gateway.infrastructure.lib.observability.ObservabilityRegistriesFactory
+import ru.somarov.gateway.infrastructure.lib.observability.micrometer.observeAndAwait
 import ru.somarov.gateway.infrastructure.props.AppProps
-import ru.somarov.gateway.infrastructure.rsocket.client.Config
-import ru.somarov.gateway.infrastructure.rsocket.client.RSocketCloudClient
+import ru.somarov.gateway.infrastructure.lib.rsocket.client.Client
+import ru.somarov.gateway.infrastructure.lib.rsocket.client.Config
+import ru.somarov.gateway.infrastructure.lib.rsocket.client.create
 import ru.somarov.gateway.presentation.http.auth
 import ru.somarov.gateway.presentation.http.healthcheck
 import java.util.*
@@ -35,10 +36,28 @@ import kotlin.coroutines.EmptyCoroutineContext
 internal fun Application.config() {
     val log = KotlinLogging.logger { }
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-    val props = AppProps.parseProps(environment)
+
+    val appProps = AppProps.parseProps(environment)
+    val buildProps = parseBuildProperties("/META-INF/build-info.properties")
+
     val mapper = ObjectMapper(CBORFactory()).registerKotlinModule()
 
-    val (meterRegistry, observationRegistry) = setupObservability(props)
+    val (meterRegistry, observationRegistry) = ObservabilityRegistriesFactory.create(appProps, buildProps)
+
+    val client = Client(
+        create(
+            config = Config(
+                host = appProps.clients.auth.host,
+                name = "auth"
+            ),
+            meterRegistry = meterRegistry,
+            observationRegistry = observationRegistry,
+            mapper = mapper,
+        ),
+        coroutineContext = EmptyCoroutineContext
+    )
+
+    val service = Service(client)
 
     install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
 
@@ -57,35 +76,16 @@ internal fun Application.config() {
     }
 
     intercept(ApplicationCallPipeline.Monitoring) {
-        val observation = Observation.createNotStarted(
-            "http_observation",
-            {
-                ReceiverContext<ApplicationRequest> { request, key -> request.headers[key] }
-                    .also { it.carrier = this.call.request }
-            },
-            observationRegistry
-        )
-
-        observation.observeAndAwait {
-            proceed()
-        }
+        val context = ReceiverContext<ApplicationRequest> { request, key -> request.headers[key] }
+        context.carrier = this.call.request
+        Observation.createNotStarted("http_observation", { context }, observationRegistry).observeAndAwait { proceed() }
     }
-
-    val client = RSocketCloudClient(
-        config = Config(
-            host = props.clients.auth.host,
-            name = "auth"
-        ),
-        meterRegistry = meterRegistry,
-        observationRegistry = observationRegistry,
-        mapper = mapper,
-        coroutineContext = EmptyCoroutineContext
-    )
-
-    val service = Service(client)
 
     routing {
         healthcheck()
         auth(service)
     }
 }
+
+private fun parseBuildProperties(path: String) =
+    Properties().also { props -> Application::class.java.getResourceAsStream(path)?.use { props.load(it) } }

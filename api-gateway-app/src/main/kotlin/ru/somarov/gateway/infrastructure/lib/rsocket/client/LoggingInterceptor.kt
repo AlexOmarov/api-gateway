@@ -1,4 +1,4 @@
-package ru.somarov.gateway.infrastructure.rsocket.client
+package ru.somarov.gateway.infrastructure.lib.rsocket.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
@@ -6,13 +6,14 @@ import io.rsocket.Payload
 import io.rsocket.RSocket
 import io.rsocket.metadata.WellKnownMimeType
 import io.rsocket.plugins.RSocketInterceptor
+import io.rsocket.util.RSocketProxy
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.asPublisher
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import ru.somarov.gateway.infrastructure.rsocket.payload.deserialize
+import ru.somarov.gateway.infrastructure.lib.rsocket.payload.deserialize
 
 class LoggingInterceptor(private val mapper: ObjectMapper) : RSocketInterceptor {
     private val log = logger { }
@@ -21,7 +22,7 @@ class LoggingInterceptor(private val mapper: ObjectMapper) : RSocketInterceptor 
         return createDecorator(rSocket)
     }
 
-    private fun createDecorator(input: RSocket) = object : RSocket {
+    private fun createDecorator(input: RSocket) = object : RSocketProxy(input) {
         override fun requestResponse(payload: Payload): Mono<Payload> {
             log.info { createMessage("Outgoing RS request <-", payload) }
 
@@ -35,7 +36,7 @@ class LoggingInterceptor(private val mapper: ObjectMapper) : RSocketInterceptor 
 
             return input
                 .fireAndForget(payload)
-                .doOnSuccess { log.info { "Completed" } }
+                .doOnSuccess { log.info { "Outgoing RS fire completed" } }
         }
 
         override fun requestStream(payload: Payload): Flux<Payload> {
@@ -55,10 +56,6 @@ class LoggingInterceptor(private val mapper: ObjectMapper) : RSocketInterceptor 
             return input
                 .requestChannel(loggedPayloads)
                 .doOnNext { log.info { createMessage("Incoming RS channel payload ->", it) } }
-        }
-
-        override fun dispose() {
-            input.dispose()
         }
     }
 

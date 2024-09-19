@@ -5,6 +5,7 @@ import io.ktor.utils.io.core.*
 import io.netty.buffer.ByteBufAllocator
 import io.netty.buffer.Unpooled
 import io.rsocket.kotlin.ExperimentalMetadataApi
+import io.rsocket.kotlin.RSocket
 import io.rsocket.kotlin.metadata.CompositeMetadata
 import io.rsocket.kotlin.metadata.RoutingMetadata
 import io.rsocket.kotlin.metadata.toPacket
@@ -17,13 +18,12 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
-import ru.somarov.gateway.infrastructure.rsocket.client.RSocketCloudClient
 import ru.somarov.gateway.presentation.request.RegistrationRequest
 import ru.somarov.gateway.presentation.response.RegistrationResponse
 import java.util.UUID
 
 @OptIn(ExperimentalSerializationApi::class, ExperimentalMetadataApi::class)
-class Service(private val client: RSocketCloudClient) {
+class Service(private val client: RSocket) {
     private val log = logger { }
 
     suspend fun register(request: RegistrationRequest): RegistrationResponse {

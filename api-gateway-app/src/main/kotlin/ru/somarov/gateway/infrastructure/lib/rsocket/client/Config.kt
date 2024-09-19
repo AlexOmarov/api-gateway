@@ -1,4 +1,4 @@
-package ru.somarov.gateway.infrastructure.rsocket.client
+package ru.somarov.gateway.infrastructure.lib.rsocket.client
 
 import io.rsocket.loadbalance.LoadbalanceStrategy
 import io.rsocket.loadbalance.RoundRobinLoadbalanceStrategy
@@ -40,7 +40,6 @@ data class Config(
         val size: Int = POOL_SIZE,
         val interval: Long = REFRESH_INTERVAL
     )
-
 
     companion object {
         private const val RECONNECT_ATTEMPTS = 5L

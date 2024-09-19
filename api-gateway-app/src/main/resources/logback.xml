@@ -31,7 +31,11 @@
                 </stackTrace>
             </providers>
             <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
-                <valueMasker class="ru.somarov.gateway.infrastructure.logging.Masker" />
+                <valueMasker class="ru.somarov.gateway.infrastructure.lib.logging.Masker" >
+                    <parameters>
+                        <fields>${FIELD_MASK_LIST:-}</fields>
+                    </parameters>
+                </valueMasker>
             </jsonGeneratorDecorator>
         </encoder>
     </appender>

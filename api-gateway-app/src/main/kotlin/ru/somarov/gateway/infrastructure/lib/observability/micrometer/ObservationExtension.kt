@@ -1,4 +1,6 @@
-package ru.somarov.gateway.infrastructure.observability.micrometer
+@file:Suppress("TooGenericExceptionCaught")
+
+package ru.somarov.gateway.infrastructure.lib.observability.micrometer
 
 import io.micrometer.core.instrument.kotlin.asContextElement
 import io.micrometer.observation.Observation
@@ -10,10 +12,9 @@ import reactor.core.publisher.Mono
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-@Suppress("TooGenericExceptionCaught")
-suspend fun <T> Observation.observeAndAwait(func: suspend () -> T) {
+suspend fun <T> Observation.observeAndAwait(func: suspend () -> T): T {
     start()
-    try {
+    return try {
         withContext(openScope().use { observationRegistry.asContextElement() }) {
             func()
         }
@@ -25,8 +26,7 @@ suspend fun <T> Observation.observeAndAwait(func: suspend () -> T) {
     }
 }
 
-@Suppress("TooGenericExceptionCaught")
-fun <T> Observation.observeSuspendedMono(
+fun <T> Observation.observeSuspendedAsMono(
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     coroutineContext: CoroutineContext = EmptyCoroutineContext,
     runnable: suspend () -> T

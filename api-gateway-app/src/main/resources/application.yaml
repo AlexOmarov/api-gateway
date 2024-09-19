@@ -9,10 +9,13 @@ ktor:
   otel:
     protocol: "http"
     host: "$OTEL_HOST:localhost"
-    logs-port: "4317"
-    metrics-port: "4318"
-    tracing-port: "4319"
-    tracing-probability: "1.0"
+    logs:
+      port: "4317"
+    metrics:
+      port: "4318"
+    tracing:
+      port: "4319"
+      probability: "1.0"
   clients:
     auth:
       host: "ws://localhost:8082/register"

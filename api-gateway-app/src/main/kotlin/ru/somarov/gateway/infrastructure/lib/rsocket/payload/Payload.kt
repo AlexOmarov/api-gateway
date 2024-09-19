@@ -1,4 +1,4 @@
-package ru.somarov.gateway.infrastructure.rsocket.payload
+package ru.somarov.gateway.infrastructure.lib.rsocket.payload
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.utils.io.*

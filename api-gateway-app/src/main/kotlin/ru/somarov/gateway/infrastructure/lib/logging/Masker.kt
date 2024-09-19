@@ -1,13 +1,10 @@
-package ru.somarov.gateway.infrastructure.logging
+package ru.somarov.gateway.infrastructure.lib.logging
 
 import com.fasterxml.jackson.core.JsonStreamContext
 import net.logstash.logback.mask.ValueMasker
 import java.util.regex.Pattern
 
-class Masker : ValueMasker {
-    private val fields = listOf(
-        "password"
-    )
+class Masker(fields: List<String>) : ValueMasker {
 
     private val pattern = "(: \"|=|\":|: |:)[^,& :}\n]{2,}"
 

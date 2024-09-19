@@ -1,6 +1,7 @@
 package ru.somarov.gateway.infrastructure.props
 
 import io.ktor.server.application.*
+import ru.somarov.gateway.infrastructure.lib.observability.OtelProps
 
 data class AppProps(
     val name: String,
@@ -13,7 +14,7 @@ data class AppProps(
             return AppProps(
                 name = environment.config.property("ktor.name").getString(),
                 instance = environment.config.property("ktor.instance").getString(),
-                otel = OtelProps.parse(environment),
+                otel = OtelProps.Companion.parse(environment),
                 clients = ClientsProps.parse(environment)
             )
         }
