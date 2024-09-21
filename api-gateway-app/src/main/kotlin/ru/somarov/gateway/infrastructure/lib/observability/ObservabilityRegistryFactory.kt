@@ -30,8 +30,8 @@ import ru.somarov.gateway.infrastructure.props.AppProps
 import java.util.Collections
 import java.util.Properties
 
-object ObservabilityRegistriesFactory {
-    fun create(props: AppProps, buildProps: Properties): Pair<MeterRegistry, ObservationRegistry> {
+object ObservabilityRegistryFactory {
+    fun create(props: AppProps, buildProps: Properties): ObservabilityRegistry {
         val sdk = OpenTelemetrySdkFactory.create(props)
 
         val meterRegistry = createMeterRegistry(sdk, props, buildProps)
@@ -39,7 +39,7 @@ object ObservabilityRegistriesFactory {
 
         OpenTelemetryAppender.install(sdk)
 
-        return Pair(meterRegistry, observationRegistry)
+        return ObservabilityRegistry(meterRegistry, observationRegistry)
     }
 
     private fun createObservationRegistry(sdk: OpenTelemetrySdk, meterRegistry: MeterRegistry): ObservationRegistry {
@@ -86,14 +86,15 @@ object ObservabilityRegistriesFactory {
     private fun createMeterRegistry(sdk: OpenTelemetrySdk, props: AppProps, buildProps: Properties): MeterRegistry {
         val registry = OpenTelemetryMeterRegistry.create(sdk)
 
-        registry.config().commonTags(
-            "application", props.name,
-            "instance", props.instance
-        )
+        registry
+            .config()
+            .commonTags(
+                "application", props.name,
+                "instance", props.instance
+            )
 
-        Gauge.builder("project_version") { 1 }
+        Gauge.builder("project_version") { buildProps.getProperty("version", "0").toInt() }
             .description("Version of project in tag")
-            .tag("version", buildProps.getProperty("version", "undefined"))
             .register(registry)
 
         return registry

@@ -1,4 +1,4 @@
-package ru.somarov.gateway.infrastructure.lib.rsocket.client
+package ru.somarov.gateway.infrastructure.lib.client.rsocket
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
@@ -13,7 +13,6 @@ import kotlinx.coroutines.reactive.asPublisher
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import ru.somarov.gateway.infrastructure.lib.rsocket.payload.deserialize
 
 class LoggingInterceptor(private val mapper: ObjectMapper) : RSocketInterceptor {
     private val log = logger { }

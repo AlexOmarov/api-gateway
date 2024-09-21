@@ -21,12 +21,11 @@ import io.micrometer.observation.Observation
 import io.micrometer.observation.transport.ReceiverContext
 import kotlinx.serialization.json.Json
 import ru.somarov.gateway.application.service.Service
-import ru.somarov.gateway.infrastructure.lib.observability.ObservabilityRegistriesFactory
+import ru.somarov.gateway.infrastructure.lib.observability.ObservabilityRegistryFactory
 import ru.somarov.gateway.infrastructure.lib.observability.micrometer.observeAndAwait
+import ru.somarov.gateway.infrastructure.lib.client.rsocket.Client
+import ru.somarov.gateway.infrastructure.lib.client.rsocket.Config
 import ru.somarov.gateway.infrastructure.props.AppProps
-import ru.somarov.gateway.infrastructure.lib.rsocket.client.Client
-import ru.somarov.gateway.infrastructure.lib.rsocket.client.Config
-import ru.somarov.gateway.infrastructure.lib.rsocket.client.create
 import ru.somarov.gateway.presentation.http.auth
 import ru.somarov.gateway.presentation.http.healthcheck
 import java.util.*
@@ -42,18 +41,15 @@ internal fun Application.config() {
 
     val mapper = ObjectMapper(CBORFactory()).registerKotlinModule()
 
-    val (meterRegistry, observationRegistry) = ObservabilityRegistriesFactory.create(appProps, buildProps)
+    val registry = ObservabilityRegistryFactory.create(appProps, buildProps)
 
     val client = Client(
-        create(
-            config = Config(
-                host = appProps.clients.auth.host,
-                name = "auth"
-            ),
-            meterRegistry = meterRegistry,
-            observationRegistry = observationRegistry,
-            mapper = mapper,
+        config = Config(
+            host = appProps.clients.auth.host,
+            name = "auth"
         ),
+        registry = registry,
+        mapper = mapper,
         coroutineContext = EmptyCoroutineContext
     )
 
@@ -62,7 +58,7 @@ internal fun Application.config() {
     install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
 
     install(MicrometerMetrics) {
-        registry = meterRegistry
+        this.registry = registry.meterRegistry
         meterBinders = listOf(JvmMemoryMetrics(), JvmGcMetrics(), ProcessorMetrics())
     }
 
@@ -78,7 +74,8 @@ internal fun Application.config() {
     intercept(ApplicationCallPipeline.Monitoring) {
         val context = ReceiverContext<ApplicationRequest> { request, key -> request.headers[key] }
         context.carrier = this.call.request
-        Observation.createNotStarted("http_observation", { context }, observationRegistry).observeAndAwait { proceed() }
+        Observation.createNotStarted("http_observation", { context }, registry.observationRegistry)
+            .observeAndAwait { proceed() }
     }
 
     routing {

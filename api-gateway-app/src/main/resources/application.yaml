@@ -18,4 +18,4 @@ ktor:
       probability: "1.0"
   clients:
     auth:
-      host: "ws://localhost:8082/register"
+      host: "ws://localhost:30020/register"

@@ -1,4 +1,4 @@
-package ru.somarov.gateway.infrastructure.lib.rsocket.payload
+package ru.somarov.gateway.infrastructure.lib.client.rsocket
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.utils.io.*
@@ -15,7 +15,6 @@ import io.rsocket.metadata.CompositeMetadataCodec
 import io.rsocket.util.DefaultPayload
 import java.nio.charset.Charset
 import java.util.*
-import io.rsocket.kotlin.payload.Payload as payload
 
 @ExperimentalMetadataApi
 fun io.rsocket.kotlin.payload.Payload.toJavaPayload(): Payload {
@@ -33,7 +32,7 @@ fun io.rsocket.kotlin.payload.Payload.toJavaPayload(): Payload {
 }
 
 suspend fun Payload.toKotlinPayload(): io.rsocket.kotlin.payload.Payload {
-    return payload(
+    return io.rsocket.kotlin.payload.Payload(
         ByteReadChannel(this.data).readRemaining(),
         ByteReadChannel(this.metadata).readRemaining()
     )

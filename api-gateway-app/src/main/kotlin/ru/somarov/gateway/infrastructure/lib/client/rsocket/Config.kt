@@ -1,4 +1,4 @@
-package ru.somarov.gateway.infrastructure.lib.rsocket.client
+package ru.somarov.gateway.infrastructure.lib.client.rsocket
 
 import io.rsocket.loadbalance.LoadbalanceStrategy
 import io.rsocket.loadbalance.RoundRobinLoadbalanceStrategy
