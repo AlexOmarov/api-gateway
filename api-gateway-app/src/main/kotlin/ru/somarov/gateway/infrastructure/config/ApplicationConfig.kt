@@ -37,17 +37,14 @@ internal fun Application.config() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
 
     val appProps = AppProps.parseProps(environment)
-    val buildProps = parseBuildProperties("/META-INF/build-info.properties")
+    val buildProps = parseBuildProperties(appProps.buildPropsPath)
 
     val mapper = ObjectMapper(CBORFactory()).registerKotlinModule()
 
     val registry = ObservabilityRegistryFactory.create(appProps, buildProps)
 
     val client = Client(
-        config = Config(
-            host = appProps.clients.auth.host,
-            name = "auth"
-        ),
+        config = Config(host = appProps.clients.auth.host, name = "auth"),
         registry = registry,
         mapper = mapper,
         coroutineContext = EmptyCoroutineContext

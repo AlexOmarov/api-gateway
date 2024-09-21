@@ -6,6 +6,7 @@ ktor:
       - ru.somarov.gateway.infrastructure.config.ApplicationConfigKt.config
   name: "$APP_NAME:api-gateway"
   instance: "$HOSTNAME:undefined"
+  build-props-path: "/META-INF/build-info.properties"
   otel:
     protocol: "http"
     host: "$OTEL_HOST:localhost"
