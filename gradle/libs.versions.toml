@@ -1,8 +1,9 @@
 [versions]
 detekt = "1.23.6"
 jackson = "2.17.1"
+koin = "4.0.0"
 kompendium = "3.14.4"
-kotlin = "2.0.0"
+kotlin = "2.0.20"
 kotlin-datetime="0.6.0"
 kotlin-logging="7.0.0"
 kotlin-reactor="1.8.1"
@@ -28,52 +29,54 @@ testcontainers = "1.20.0"
 kotlin-test = "2.0.20-Beta2"
 
 [libraries]
-detekt-ktlint = { group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version.ref = "detekt" }
-kompendium = { group = "io.bkbn", name = "kompendium-core", version.ref = "kompendium" }
-kotlin-coroutines-reactor = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-reactor", version.ref = "kotlin-reactor" }
-kotlin-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlin-datetime" }
-kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging", version.ref = "kotlin-logging" }
-kotlin-jackson = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version.ref = "jackson" }
-kotlin-jackson-cbor = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-cbor", version.ref = "jackson" }
-kotlin-serialization-cbor = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-cbor", version.ref = "kotlin-serialization" }
-kotlin-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlin-serialization" }
-kotlin-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlin-serialization" }
-kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin-test" }
-ktor-server-call-id = { group = "io.ktor", name = "ktor-server-call-id", version.ref = "ktor" }
-ktor-server-config-yaml = { group = "io.ktor", name = "ktor-server-config-yaml", version.ref = "ktor" }
-ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
-ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
-ktor-server-metrics-micrometer = { group = "io.ktor", name = "ktor-server-metrics-micrometer", version.ref = "ktor" }
-ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
-ktor-server-openapi = { group = "io.ktor", name = "ktor-server-openapi", version.ref = "ktor" }
-ktor-server-request-validation = { group = "io.ktor", name = "ktor-server-request-validation", version.ref = "ktor" }
-ktor-server-serialization-kotlinx-cbor = { group = "io.ktor", name = "ktor-serialization-kotlinx-cbor", version.ref = "ktor" }
-ktor-server-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
-ktor-server-status-pages = { group = "io.ktor", name = "ktor-server-status-pages", version.ref = "ktor" }
-ktor-server-swagger = { group = "io.ktor", name = "ktor-server-swagger", version.ref = "ktor" }
-ktor-server-tests = { group = "io.ktor", name = "ktor-server-test-host", version.ref = "ktor" }
-logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
-logback-logstash = { group = "net.logstash.logback", name = "logstash-logback-encoder", version.ref = "logstash-logback-encoder" }
-logback-otel = { group = "io.opentelemetry.instrumentation", name = "opentelemetry-logback-appender-1.0", version.ref = "otel-logback-encoder" }
-micrometer = { group = "io.micrometer", name = "micrometer-core", version.ref = "micrometer" }
-micrometer-context-propagation = { group = "io.micrometer", name = "context-propagation", version.ref = "micrometer-context-propagation" }
-micrometer-reactor = { group = "io.projectreactor", name = "reactor-core-micrometer", version.ref = "micrometer-reactor" }
-micrometer-tracing = { group = "io.micrometer", name = "micrometer-tracing", version.ref = "micrometer-tracing" }
-micrometer-tracing-otel = { group = "io.micrometer", name = "micrometer-tracing-bridge-otel", version.ref = "micrometer-tracing" }
+detekt-ktlint = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+koin = { module="io.insert-koin:koin-ktor", version.ref = "koin" }
+kompendium = { module = "io.bkbn:kompendium-core", version.ref = "kompendium" }
+kotlin-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "kotlin-reactor" }
+kotlin-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlin-datetime" }
+kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlin-logging" }
+kotlin-jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin",  version.ref = "jackson" }
+kotlin-jackson-cbor = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor", version.ref = "jackson" }
+kotlin-serialization-cbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cbor", version.ref = "kotlin-serialization" }
+kotlin-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlin-serialization" }
+kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin-test" }
+ktor-server-call-id = { module = "io.ktor:ktor-server-call-id", version.ref = "ktor" }
+ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-metrics-micrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-openapi = { module = "io.ktor:ktor-server-openapi", version.ref = "ktor" }
+ktor-server-request-validation = { module = "io.ktor:ktor-server-request-validation", version.ref = "ktor" }
+ktor-server-serialization-kotlinx-cbor = { module = "io.ktor:ktor-serialization-kotlinx-cbor", version.ref = "ktor" }
+ktor-server-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
+ktor-server-swagger = { module = "io.ktor:ktor-server-swagger", version.ref = "ktor" }
+ktor-server-tests = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logback-logstash = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logstash-logback-encoder" }
+logback-otel = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0", version.ref = "otel-logback-encoder" }
+micrometer = { module = "io.micrometer:micrometer-core", version.ref = "micrometer" }
+micrometer-context-propagation = { module = "io.micrometer:context-propagation", version.ref = "micrometer-context-propagation" }
+micrometer-reactor = { module = "io.projectreactor:reactor-core-micrometer", version.ref = "micrometer-reactor" }
+micrometer-tracing = { module = "io.micrometer:micrometer-tracing", version.ref = "micrometer-tracing" }
+micrometer-tracing-otel = { module = "io.micrometer:micrometer-tracing-bridge-otel", version.ref = "micrometer-tracing" }
 netty = { module = "io.projectreactor.netty:reactor-netty", version.ref = "netty" }
 otel-otlp-exporter = { module = "io.opentelemetry:opentelemetry-exporter-otlp", version.ref = "otel" }
 otel-micrometer = { module = "io.opentelemetry.instrumentation:opentelemetry-micrometer-1.5", version.ref = "otel-micrometer" }
-rsocket-core = { group = "io.rsocket.kotlin", name = "rsocket-core", version.ref = "rsocket" }
-rsocket-ktor-client = { group = "io.rsocket.kotlin", name = "rsocket-ktor-client", version.ref = "rsocket" }
-rsocket-ktor-server = { group = "io.rsocket.kotlin", name = "rsocket-ktor-server", version.ref = "rsocket" }
-rsocket-transport-ktor = { group = "io.rsocket.kotlin", name = "rsocket-transport-ktor", version.ref = "rsocket-transport-ktor" }
-rsocket-transport-netty = { group = "io.rsocket", name = "rsocket-transport-netty", version.ref = "rsocket-transport-netty" }
+rsocket-core = { module = "io.rsocket.kotlin:rsocket-core", version.ref = "rsocket" }
+rsocket-ktor-client = { module = "io.rsocket.kotlin:rsocket-ktor-client", version.ref = "rsocket" }
+rsocket-ktor-server = { module = "io.rsocket.kotlin:rsocket-ktor-server", version.ref = "rsocket" }
+rsocket-transport-ktor = { module = "io.rsocket.kotlin:rsocket-transport-ktor", version.ref = "rsocket-transport-ktor" }
+rsocket-transport-netty = { module = "io.rsocket:rsocket-transport-netty", version.ref = "rsocket-transport-netty" }
 rsocket-micrometer = { module = "io.rsocket:rsocket-micrometer", version.ref = "rsocket-micrometer" }
-testcontainers = { group = "org.testcontainers", name = "testcontainers", version.ref = "testcontainers" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 
 [bundles]
 
 kotlinx = [
+    "koin",
     "kotlin-coroutines-reactor",
     "kotlin-datetime",
     "kotlin-logging",

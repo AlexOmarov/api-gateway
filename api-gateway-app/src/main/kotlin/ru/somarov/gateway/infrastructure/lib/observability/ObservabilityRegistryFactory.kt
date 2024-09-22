@@ -28,13 +28,12 @@ import io.rsocket.micrometer.observation.RSocketResponderTracingObservationHandl
 import ru.somarov.gateway.infrastructure.lib.observability.opentelemetry.OpenTelemetrySdkFactory
 import ru.somarov.gateway.infrastructure.props.AppProps
 import java.util.Collections
-import java.util.Properties
 
 object ObservabilityRegistryFactory {
-    fun create(props: AppProps, buildProps: Properties): ObservabilityRegistry {
+    fun create(props: AppProps): ObservabilityRegistry {
         val sdk = OpenTelemetrySdkFactory.create(props)
 
-        val meterRegistry = createMeterRegistry(sdk, props, buildProps)
+        val meterRegistry = createMeterRegistry(sdk, props)
         val observationRegistry = createObservationRegistry(sdk, meterRegistry)
 
         OpenTelemetryAppender.install(sdk)
@@ -83,7 +82,7 @@ object ObservabilityRegistryFactory {
         return OtelTracer(tracer, context, publisher, baggage)
     }
 
-    private fun createMeterRegistry(sdk: OpenTelemetrySdk, props: AppProps, buildProps: Properties): MeterRegistry {
+    private fun createMeterRegistry(sdk: OpenTelemetrySdk, props: AppProps): MeterRegistry {
         val registry = OpenTelemetryMeterRegistry.create(sdk)
 
         registry
@@ -93,7 +92,8 @@ object ObservabilityRegistryFactory {
                 "instance", props.instance
             )
 
-        Gauge.builder("project_version") { buildProps.getProperty("version", "0").toInt() }
+        Gauge.builder("project_version") { 1 }
+            .tag("version", props.build.version)
             .description("Version of project in tag")
             .register(registry)
 

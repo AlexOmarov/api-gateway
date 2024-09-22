@@ -4,6 +4,8 @@ ktor:
   application:
     modules:
       - ru.somarov.gateway.infrastructure.config.ApplicationConfigKt.config
+  environment:
+    timezone: "UTC"
   name: "$APP_NAME:api-gateway"
   instance: "$HOSTNAME:undefined"
   build-props-path: "/META-INF/build-info.properties"

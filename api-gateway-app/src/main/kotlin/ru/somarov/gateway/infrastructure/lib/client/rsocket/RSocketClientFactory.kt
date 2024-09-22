@@ -1,6 +1,5 @@
 package ru.somarov.gateway.infrastructure.lib.client.rsocket
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.rsocket.core.RSocketClient
@@ -21,14 +20,14 @@ import java.time.Duration.ofMillis
 import java.util.UUID
 
 object RSocketClientFactory {
-    fun create(config: Config, registry: ObservabilityRegistry, mapper: ObjectMapper): RSocketClient {
+    fun create(config: Config, registry: ObservabilityRegistry): RSocketClient {
         val sources = mutableListOf<LoadbalanceTarget>()
         val log = logger { }
         repeat(config.pool.size) { sources.add(createTarget(config.host)) }
 
         return LoadbalanceRSocketClient
             .builder(createInfiniteSources(config, sources, log))
-            .connector(createConnector(config, registry, mapper))
+            .connector(createConnector(config, registry))
             .loadbalanceStrategy(config.loadBalanceStrategy)
             .build()
     }
@@ -49,11 +48,7 @@ object RSocketClientFactory {
         log.info { "RSocket client ${config.name} updated: ${old.key} is replaced by ${new.key}" }
     }
 
-    private fun createConnector(
-        config: Config,
-        registry: ObservabilityRegistry,
-        mapper: ObjectMapper
-    ): RSocketConnector {
+    private fun createConnector(config: Config, registry: ObservabilityRegistry): RSocketConnector {
         val connector = RSocketConnector.create()
 
         config.resumption?.let { connector.resume(Resume().retry(config.resumption.retry)) }
@@ -61,7 +56,6 @@ object RSocketClientFactory {
         connector.keepAlive(ofMillis(config.keepAlive.interval), ofMillis(config.keepAlive.maxLifeTime))
 
         connector.interceptors { con ->
-            con.forRequester(LoggingInterceptor(mapper))
             con.forRequester(MicrometerRSocketInterceptor(registry.meterRegistry))
             con.forRequester(RSocketInterceptor { ObservationRequesterRSocketProxy(it, registry.observationRegistry) })
         }

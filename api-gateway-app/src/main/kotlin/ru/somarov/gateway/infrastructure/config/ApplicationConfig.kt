@@ -20,6 +20,7 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.observation.Observation
 import io.micrometer.observation.transport.ReceiverContext
 import kotlinx.serialization.json.Json
+import reactor.core.publisher.Hooks
 import ru.somarov.gateway.application.service.Service
 import ru.somarov.gateway.infrastructure.lib.observability.ObservabilityRegistryFactory
 import ru.somarov.gateway.infrastructure.lib.observability.micrometer.observeAndAwait
@@ -33,18 +34,18 @@ import kotlin.coroutines.EmptyCoroutineContext
 
 @Suppress("unused") // Referenced in application.yaml
 internal fun Application.config() {
-    val log = KotlinLogging.logger { }
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+    initStaticConfig()
 
-    val appProps = AppProps.parseProps(environment)
-    val buildProps = parseBuildProperties(appProps.buildPropsPath)
+    val log = KotlinLogging.logger { }
+
+    val props = AppProps.parse(environment)
 
     val mapper = ObjectMapper(CBORFactory()).registerKotlinModule()
 
-    val registry = ObservabilityRegistryFactory.create(appProps, buildProps)
+    val registry = ObservabilityRegistryFactory.create(props)
 
     val client = Client(
-        config = Config(host = appProps.clients.auth.host, name = "auth"),
+        config = Config(host = props.clients.auth.host, name = "auth"),
         registry = registry,
         mapper = mapper,
         coroutineContext = EmptyCoroutineContext
@@ -81,5 +82,7 @@ internal fun Application.config() {
     }
 }
 
-private fun parseBuildProperties(path: String) =
-    Properties().also { props -> Application::class.java.getResourceAsStream(path)?.use { props.load(it) } }
+private fun initStaticConfig() {
+    Hooks.enableAutomaticContextPropagation()
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+}
