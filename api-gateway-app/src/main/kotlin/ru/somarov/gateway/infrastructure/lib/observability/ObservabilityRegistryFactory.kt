@@ -26,11 +26,11 @@ import io.rsocket.micrometer.observation.ByteBufSetter
 import io.rsocket.micrometer.observation.RSocketRequesterTracingObservationHandler
 import io.rsocket.micrometer.observation.RSocketResponderTracingObservationHandler
 import ru.somarov.gateway.infrastructure.lib.observability.opentelemetry.OpenTelemetrySdkFactory
-import ru.somarov.gateway.infrastructure.props.AppProps
+import ru.somarov.gateway.infrastructure.lib.observability.props.OtelProps
 import java.util.Collections
 
 object ObservabilityRegistryFactory {
-    fun create(props: AppProps): ObservabilityRegistry {
+    fun create(props: OtelProps): ObservabilityRegistry {
         val sdk = OpenTelemetrySdkFactory.create(props)
 
         val meterRegistry = createMeterRegistry(sdk, props)
@@ -82,7 +82,7 @@ object ObservabilityRegistryFactory {
         return OtelTracer(tracer, context, publisher, baggage)
     }
 
-    private fun createMeterRegistry(sdk: OpenTelemetrySdk, props: AppProps): MeterRegistry {
+    private fun createMeterRegistry(sdk: OpenTelemetrySdk, props: OtelProps): MeterRegistry {
         val registry = OpenTelemetryMeterRegistry.create(sdk)
 
         registry

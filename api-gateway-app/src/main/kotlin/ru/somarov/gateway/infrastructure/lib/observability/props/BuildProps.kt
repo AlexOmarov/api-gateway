@@ -1,4 +1,4 @@
-package ru.somarov.gateway.infrastructure.build
+package ru.somarov.gateway.infrastructure.lib.observability.props
 
 import io.ktor.server.application.Application
 import java.util.Properties

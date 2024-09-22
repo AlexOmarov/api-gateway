@@ -15,10 +15,10 @@ import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
 import io.opentelemetry.sdk.trace.samplers.Sampler
-import ru.somarov.gateway.infrastructure.props.AppProps
+import ru.somarov.gateway.infrastructure.lib.observability.props.OtelProps
 
 object OpenTelemetrySdkFactory {
-    fun create(props: AppProps): OpenTelemetrySdk {
+    fun create(props: OtelProps): OpenTelemetrySdk {
         return OpenTelemetrySdk.builder()
             .setPropagators { W3CTraceContextPropagator.getInstance() }
             .setMeterProvider(createMeterProvider(props))
@@ -27,8 +27,8 @@ object OpenTelemetrySdkFactory {
             .build()
     }
 
-    private fun createMeterProvider(props: AppProps): SdkMeterProvider {
-        val url = "${props.otel.protocol}://${props.otel.host}:${props.otel.metrics.port}"
+    private fun createMeterProvider(props: OtelProps): SdkMeterProvider {
+        val url = "${props.protocol}://${props.host}:${props.metrics.port}"
 
         val exporter = OtlpGrpcMetricExporter.builder().setEndpoint(url).build()
         val reader = PeriodicMetricReader.builder(exporter).build()
@@ -40,8 +40,8 @@ object OpenTelemetrySdkFactory {
             .build()
     }
 
-    private fun createLoggerProvider(props: AppProps): SdkLoggerProvider {
-        val url = "${props.otel.protocol}://${props.otel.host}:${props.otel.logs.port}"
+    private fun createLoggerProvider(props: OtelProps): SdkLoggerProvider {
+        val url = "${props.protocol}://${props.host}:${props.logs.port}"
 
         val exporter = OtlpGrpcLogRecordExporter.builder().setEndpoint(url).build()
         val processor = BatchLogRecordProcessor.builder(exporter).build()
@@ -53,10 +53,10 @@ object OpenTelemetrySdkFactory {
             .build()
     }
 
-    private fun createTracerProvider(props: AppProps): SdkTracerProvider {
-        val url = "${props.otel.url}:${props.otel.traces.port}"
+    private fun createTracerProvider(props: OtelProps): SdkTracerProvider {
+        val url = "${props.url}:${props.traces.port}"
 
-        val sampler = Sampler.parentBased(Sampler.traceIdRatioBased(props.otel.traces.probability))
+        val sampler = Sampler.parentBased(Sampler.traceIdRatioBased(props.traces.probability))
         val exporter = OtlpGrpcSpanExporter.builder().setEndpoint(url).build()
         val processor = BatchSpanProcessor.builder(exporter).build()
 
@@ -68,7 +68,7 @@ object OpenTelemetrySdkFactory {
             .build()
     }
 
-    private fun createCommonResource(props: AppProps) = Resource.create(
+    private fun createCommonResource(props: OtelProps) = Resource.create(
         Attributes.builder()
             .put("telemetry.sdk.name", "opentelemetry")
             .put("telemetry.sdk.language", "java")

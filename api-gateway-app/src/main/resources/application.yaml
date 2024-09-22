@@ -3,13 +3,13 @@ ktor:
     port: 8080
   application:
     modules:
-      - ru.somarov.gateway.infrastructure.config.ApplicationConfigKt.config
+      - ru.somarov.gateway.infrastructure.ApplicationConfigKt.config
   environment:
     timezone: "UTC"
-  name: "$APP_NAME:api-gateway"
-  instance: "$HOSTNAME:undefined"
-  build-props-path: "/META-INF/build-info.properties"
-  otel:
+  monitoring:
+    name: "$APP_NAME:api-gateway"
+    instance: "$HOSTNAME:undefined"
+    build-props-path: "/META-INF/build-info.properties"
     protocol: "http"
     host: "$OTEL_HOST:localhost"
     logs:
