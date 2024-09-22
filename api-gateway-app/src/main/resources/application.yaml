@@ -3,7 +3,7 @@ ktor:
     port: 8080
   application:
     modules:
-      - ru.somarov.gateway.infrastructure.ApplicationConfigKt.config
+      - ru.somarov.gateway.infrastructure.ConfigKt.config
   environment:
     timezone: "UTC"
   monitoring:
