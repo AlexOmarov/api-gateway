@@ -54,16 +54,8 @@ fun Payload.deserialize(mapper: ObjectMapper): Message {
     data.get(array)
     data.rewind()
 
-    val body = if (array.isNotEmpty()) {
-        mapper.readValue(array, Any::class.java).toString()
-    } else {
-        null
-    }
-
+    val body = if (array.isNotEmpty()) { mapper.readValue(array, Any::class.java).toString() } else { null }
     return Message(body, metadata)
 }
 
-data class Message(
-    val body: String?,
-    val metadata: Map<String, String>
-)
+data class Message(val body: String?, val metadata: Map<String, String>)
