@@ -27,14 +27,6 @@ dependencies {
     testImplementation(libs.bundles.test)
 }
 
-configurations.matching { it.name == "detekt" }.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "org.jetbrains.kotlin") {
-            useVersion(io.gitlab.arturbosch.detekt.getSupportedKotlinVersion())
-        }
-    }
-}
-
 application {
     mainClass.set("ru.somarov.gateway.AppKt")
 }
@@ -70,10 +62,6 @@ tasks.register("generateBuildInfo") {
 }
 
 tasks.named("jar") {
-    dependsOn("generateBuildInfo")
-}
-
-tasks.named("buildFatJar") {
     dependsOn("generateBuildInfo")
 }
 
